@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "971238366958",
+    "firebase_url": "https://techsovlev1-default-rtdb.firebaseio.com",
+    "project_id": "techsovlev1",
+    "storage_bucket": "techsovlev1.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:971238366958:android:58beb79a516e70eead9dff",
+        "android_client_info": {
+          "package_name": "com.example.sagu"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAhJC5j4BFxYq6cYO5c2QeUC-J7d5IAaU0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

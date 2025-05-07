@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+    <link rel="stylesheet" href="./demo.css">
+    <script>
+        function op(elem){return document.querySelector(elem)}
+        function opp(elem){return document.querySelectorAll(elem)}
+    </script>
+    <style>
+        *{
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            position: relative;
+        }
+
+        .flex{
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        body{
+            width: 100vw;
+            height: 100vh;
+            background: #222;
+        }
+        .box{
+            margin: 40px;
+        }
+        .circle{
+            width: 200px;
+            height: 200px;
+        }
+        .points{
+            width: 3px;
+            height: 15px;
+            background: #222;
+            position: absolute;
+            transform: rotate(calc(var(--i)*var(--r))) translateY(-100px);
+            border-radius: 10px;
+            /* animation: glow .01s linear forwards;
+            animation-delay: calc(var(--i)*.05s); */
+        }
+        @keyframes glow {
+            100%{
+                background: var(--col);
+                box-shadow: 0 0 20px var(--col);
+            }
+        }
+        .text{
+            position: absolute;
+            color: #fff;
+            font-family: sans-serif;
+            font-size: 1.3em;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%,-50%);
+            text-align: center;
+        }
+        .big{
+            display: block;
+            font-size: 3em;
+        }
+    </style>
+</head>
+<body class="flex">
+<!-- khung nhiet do va do am -->
+    <!-- <span id="EC"></span>
+    <span id="nhietdo"></span>
+    <span id="pH"></span> -->
+
+      
+ <!--  Animated Circular Progress Bar -->
+    <div class="box">
+        <div class="circle flex" dot="80" style="--col: #ff0070"></div>
+            <div class="points" style="--i: 1;"></div>
+            <div class="points" style="--i: 2;"></div>
+            <div class="points" style="--i: 3;"></div>
+            <!-- <div class="text">
+                <big>60</big>
+                <small>temp</small>
+            </div> -->
+    </div>
+    <div class="box">
+        <div class="circle flex" dot="80" style="--col: #0f0"></div>
+            <div class="points" style="--i: 1;"></div>
+            <div class="points" style="--i: 2;"></div>
+            <div class="points" style="--i: 3;"></div>
+    </div>
+    <div class="box">
+        <div class="circle flex" dot="80" style="--col: #52a8ff"></div>
+            <div class="points" style="--i: 1;"></div>
+            <div class="points" style="--i: 2;"></div>
+            <div class="points" style="--i: 3;"></div>
+    </div>
+
+
+    <script>
+        // Dữ liệu hiển thị
+        var progressData = [
+            { label: "Nhiệt độ", value: 45, unit: "°C", scale: 100 },
+            { label: "EC", value: 78, unit: "", scale: 100 },
+            { label: "pH", value: 6.5, unit: "", scale: 12 } // Chuyển thang đo pH từ 0-12
+        ];
+    
+        function updateProgress(element, data) {
+            var numDots = parseInt(element.getAttribute("dot")); // Tổng số điểm sáng
+            var pt = '';
+            var rot = 360 / numDots; // Góc xoay mỗi điểm sáng
+            
+            // Chuyển đổi giá trị thành phần trăm đúng theo thang đo
+            var limitDots = Math.round((data.value / data.scale) * numDots); // Số điểm sáng đúng tỷ lệ
+    
+            for (var a = 1; a <= numDots; a++) {
+                let defaultStyle = "background: rgba(255,255,255,0.1);"; // Màu mờ ban đầu
+                let animationStyle = a <= limitDots ? `animation: glow 0.5s ease-in-out forwards; animation-delay: ${a * 0.05}s;` : '';
+    
+                pt += `<div class="points" style="--i: ${a}; --r: ${rot}deg; ${defaultStyle}; ${animationStyle};"></div>`;
+            }
+    
+            element.innerHTML = pt + `<div class="text"><big>${data.value}${data.unit}</big><small>${data.label}</small></div>`;
+        }
+    
+        var circles = opp(".circle");
+    
+        circles.forEach((circle, index) => {
+            let progressItem = progressData[index] || { label: "Unknown", value: 0, unit: "", scale: 100 };
+            updateProgress(circle, progressItem);
+        });
+    </script>
+    
+    <style>
+    @keyframes glow {
+        0% { background: rgba(255,255,255,0.1); box-shadow: none; }
+        100% { background: var(--col); box-shadow: 0 0 10px var(--col); }
+    }
+    </style>
+
+
+
+
+    
+<script src="https://www.gstatic.com/firebasejs/8.2.10/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.2.10/firebase-database.js"></script>
+<!-- TODO: Add SDKs for Firebase products that you want to use
+     https://firebase.google.com/docs/web/setup#available-libraries -->
+<script src="https://www.gstatic.com/firebasejs/8.2.10/firebase-analytics.js"></script>
+<!-- lien ket voi functions.js -->
+
+
+<script>
+  // Your web app's Firebase configuration
+  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+  var firebaseConfig = {
+    apiKey: "AIzaSyDM9Nmnq_w3HHWA2SHI2muGO7HkyW33udA",
+    authDomain: "techsovlev1.firebaseapp.com",
+    databaseURL: "https://techsovlev1-default-rtdb.firebaseio.com",
+    projectId: "techsovlev1",
+    storageBucket: "techsovlev1.firebasestorage.app",
+    messagingSenderId: "971238366958",
+    appId: "1:971238366958:web:dc08a366061e8355ad9dff",
+    measurementId: "G-R916K70EWM"
+  };
+  // Initialize Firebase
+  firebase.initializeApp(firebaseConfig);
+  firebase.analytics();
+  
+
+  //function
+  function fetchData() {
+      firebase.database().ref().child("Temp").on("value", function(snapshot){
+          progressData[0].value = snapshot.val() || 0;
+          updateCircles();
+      });
+
+      firebase.database().ref().child("EC").on("value", function(snapshot){
+          progressData[1].value = snapshot.val() || 0;
+          updateCircles();
+      });
+
+      firebase.database().ref().child("pH").on("value", function(snapshot){
+          progressData[2].value = snapshot.val() || 0;
+          updateCircles();
+      });
+  }
+
+
+  function updateCircles() {
+      var circles = opp(".circle");
+      circles.forEach((circle, index) => {
+          updateProgress(circle, progressData[index]);
+      });
+  }
+  fetchData();
+</script>
+</body>
+</html>

@@ -1,95 +1,120 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
-import 'package:sagu/const/constant.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:sagu/data/line_chart_data.dart';
+import 'package:sagu/util/responsive.dart';
 
-class LineChartWidget extends StatelessWidget {
+class LineChartWidget extends StatefulWidget {
   const LineChartWidget({super.key});
 
   @override
+  State<LineChartWidget> createState() => _LineChartWidgetState();
+}
+
+class _LineChartWidgetState extends State<LineChartWidget> {
+  late final LineData data;
+  double _timeIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    data = LineData();
+
+    FirebaseDatabase.instance.ref().onValue.listen((event) {
+      final snapshot = event.snapshot.value;
+      if (snapshot is Map) {
+        final double ec = double.tryParse(snapshot['EC'].toString()) ?? 0;
+        final double temp = double.tryParse(snapshot['Temp'].toString()) ?? 0;
+        final double ph = double.tryParse(snapshot['pH'].toString()) ?? 0;
+
+        setState(() {
+          data.addData(ec: ec, temp: temp, ph: ph, time: _timeIndex);
+          _timeIndex += 1;
+        });
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final data = LineData(); // Lấy dữ liệu (có thể truyền vào nếu cần)
+    final isMobile = Responsive.isMobile(context);
 
-    // Lấy kích thước hiện tại để có thể điều chỉnh chi tiết nếu muốn
-    // final screenWidth = MediaQuery.of(context).size.width;
-    // final bool isSmallScreen = screenWidth < 600; // Ví dụ breakpoint
-
-    return LineChart(
-      LineChartData(
-        lineTouchData: LineTouchData(handleBuiltInTouches: true),
-        gridData: FlGridData(show: false),
-        titlesData: FlTitlesData(
-          rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          bottomTitles: AxisTitles(
-            sideTitles: SideTitles(
-              showTitles: true,
-              getTitlesWidget: (double value, TitleMeta meta) {
-                // Logic lấy title dưới (giữ nguyên hoặc điều chỉnh)
-                return data.bottomTitle[value.toInt()] != null
-                    ? Padding(
-                      // Thêm Padding nhỏ để tránh bị cắt
-                      padding: const EdgeInsets.only(top: 4.0),
-                      child: Text(
-                        data.bottomTitle[value.toInt()].toString(),
-                        style: TextStyle(
-                          fontSize: 10, // Có thể giảm cỡ chữ nếu màn hình nhỏ
-                          color: Colors.grey[600], // Màu rõ hơn chút
-                        ),
-                      ),
-                    )
-                    : const SizedBox();
-              },
-              interval: 10, // Có thể tăng interval nếu màn hình nhỏ để đỡ rối
-              // reservedSize: isSmallScreen ? 20 : 30, // Giảm không gian nếu màn hình nhỏ
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: LineChart(
+        LineChartData(
+          clipData: FlClipData.all(), // 👈 Giải quyết lỗi "lồi" ra ngoài
+          minX: _timeIndex > 30 ? _timeIndex - 30 : 0,
+          maxX: _timeIndex,
+          minY: 0,
+          maxY: 100,
+          lineBarsData: [
+            LineChartBarData(
+              spots: data.ecSpots,
+              isCurved: true,
+              color: Colors.green,
+              barWidth: 2,
+              dotData: FlDotData(show: false),
             ),
-          ),
-          leftTitles: AxisTitles(
-            sideTitles: SideTitles(
-              getTitlesWidget: (double value, TitleMeta meta) {
-                // Logic lấy title trái (giữ nguyên hoặc điều chỉnh)
-                return data.leftTitle[value.toInt()] != null
-                    ? Text(
-                      data.leftTitle[value.toInt()].toString(),
+            LineChartBarData(
+              spots: data.tempSpots,
+              isCurved: true,
+              color: Colors.orange,
+              barWidth: 2,
+              dotData: FlDotData(show: false),
+            ),
+            LineChartBarData(
+              spots: data.phSpots,
+              isCurved: true,
+              color: Colors.blue,
+              barWidth: 2,
+              dotData: FlDotData(show: false),
+            ),
+          ],
+          titlesData: FlTitlesData(
+            leftTitles: AxisTitles(
+              sideTitles: SideTitles(
+                showTitles: true,
+                interval: isMobile ? 20 : 10,
+                reservedSize: isMobile ? 28 : 40,
+                getTitlesWidget: (value, meta) {
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 4),
+                    child: Text(
+                      value.toInt().toString(),
                       style: TextStyle(
-                        fontSize: 10, // Có thể giảm cỡ chữ
-                        color: Colors.grey[600],
+                        fontSize: isMobile ? 9 : 11,
+                        color: Colors.grey[400],
                       ),
-                    )
-                    : const SizedBox();
-              },
-              showTitles: true,
-              interval: 10, // Có thể tăng interval nếu màn hình nhỏ
-              reservedSize:
-                  20, // Điều chỉnh không gian cần thiết cho số bên trái
-            ),
-          ),
-        ),
-        borderData: FlBorderData(show: false),
-        lineBarsData: [
-          LineChartBarData(
-            color: selectionColor,
-            barWidth: 2.0, // Có thể làm thanh mảnh hơn
-            isCurved: true,
-            belowBarData: BarAreaData(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  selectionColor.withOpacity(0.4), // Giảm độ mờ chút
-                  Colors.transparent,
-                ],
+                    ),
+                  );
+                },
               ),
-              show: true,
             ),
-            dotData: FlDotData(show: false),
-            spots: data.spots,
+            bottomTitles: AxisTitles(
+              sideTitles: SideTitles(
+                showTitles: true,
+                interval: isMobile ? 10 : 5,
+                getTitlesWidget: (value, meta) {
+                  return Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Text(
+                      value.toInt().toString(),
+                      style: TextStyle(
+                        fontSize: isMobile ? 9 : 11,
+                        color: Colors.grey[400],
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+            topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
           ),
-        ],
-        minX: 0,
-        maxX: 125, // Giữ nguyên hoặc điều chỉnh nếu cần
-        maxY: 120,
-        minY: -5,
+          borderData: FlBorderData(show: true),
+          gridData: FlGridData(show: true),
+        ),
       ),
     );
   }

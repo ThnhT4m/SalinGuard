@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:sagu/data/line_chart_data.dart';
 import 'package:sagu/util/responsive.dart';
+import 'warning_dialog.dart';
 
 class LineChartWidget extends StatefulWidget {
   const LineChartWidget({super.key});
@@ -14,7 +15,7 @@ class LineChartWidget extends StatefulWidget {
 class _LineChartWidgetState extends State<LineChartWidget> {
   late final LineData data;
   double _timeIndex = 0;
-
+  bool _hasShownWarning = false;
   @override
   void initState() {
     super.initState();
@@ -26,7 +27,24 @@ class _LineChartWidgetState extends State<LineChartWidget> {
         final double ec = double.tryParse(snapshot['EC'].toString()) ?? 0;
         final double temp = double.tryParse(snapshot['Temp'].toString()) ?? 0;
         final double ph = double.tryParse(snapshot['pH'].toString()) ?? 0;
-
+        if (ec > 2.5 && !_hasShownWarning) {
+          _hasShownWarning = true;
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (context.mounted) {
+              showDialog(
+                context: context,
+                builder:
+                    (_) => const WarningDialog(
+                      title: 'Cảnh báo xâm nhập mặn',
+                      message: '⚠️ EC vượt ngưỡng an toàn, vui lòng kiểm tra!',
+                    ),
+              ).then((_) {
+                // Optional: reset flag sau khi dialog đóng
+                _hasShownWarning = false;
+              });
+            }
+          });
+        }
         setState(() {
           data.addData(ec: ec, temp: temp, ph: ph, time: _timeIndex);
           _timeIndex += 1;
@@ -50,13 +68,6 @@ class _LineChartWidgetState extends State<LineChartWidget> {
           maxY: 100,
           lineBarsData: [
             LineChartBarData(
-              spots: data.ecSpots,
-              isCurved: true,
-              color: Colors.green,
-              barWidth: 2,
-              dotData: FlDotData(show: false),
-            ),
-            LineChartBarData(
               spots: data.tempSpots,
               isCurved: true,
               color: Colors.orange,
@@ -67,6 +78,13 @@ class _LineChartWidgetState extends State<LineChartWidget> {
               spots: data.phSpots,
               isCurved: true,
               color: Colors.blue,
+              barWidth: 2,
+              dotData: FlDotData(show: false),
+            ),
+            LineChartBarData(
+              spots: data.ecSpots,
+              isCurved: true,
+              color: Colors.green,
               barWidth: 2,
               dotData: FlDotData(show: false),
             ),
